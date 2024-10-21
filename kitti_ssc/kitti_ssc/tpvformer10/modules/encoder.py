@@ -506,13 +506,13 @@ class TPVFormerLayer(TPVMyCustomBaseTransformerLayer):
 
             elif layer == 'ffn':
                 ffn = self.ffns[ffn_index]
-                if self.use_checkpoint:
-                    query = torch.utils.checkpoint.checkpoint(
-                        ffn,
-                        query, identity if self.pre_norm else None
-                    )
-                else:
-                    query = ffn(
+                # if self.use_checkpoint:
+                #     query = torch.utils.checkpoint.checkpoint(
+                #         ffn,
+                #         query, identity if self.pre_norm else None
+                #     )
+                # else:
+                query = ffn(
                         query, identity if self.pre_norm else None)
                 ffn_index += 1
         query = torch.split(query, [bev_h*bev_w, bev_z*bev_h, bev_w*bev_z], dim=1)

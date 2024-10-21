@@ -85,12 +85,12 @@ class TPVAggregator(BaseModule):
             fused = torch.cat([fused_vox, fused_pts], dim=-1) # bs, c, whz+n
             
             fused = fused.permute(0, 2, 1)
-            if self.use_checkpoint:
-                fused = torch.utils.checkpoint.checkpoint(self.decoder, fused)
-                logits = torch.utils.checkpoint.checkpoint(self.classifier, fused)
-            else:
-                fused = self.decoder(fused)
-                logits = self.classifier(fused)
+            # if self.use_checkpoint:
+            #     fused = torch.utils.checkpoint.checkpoint(self.decoder, fused)
+            #     logits = torch.utils.checkpoint.checkpoint(self.classifier, fused)
+            # else:
+            fused = self.decoder(fused)
+            logits = self.classifier(fused)
             logits = logits.permute(0, 2, 1)
             logits_vox = logits[:, :, :(-n)].reshape(bs, self.classes, self.scale_w*self.tpv_w, self.scale_h*self.tpv_h, self.scale_z*self.tpv_z)
             logits_pts = logits[:, :, (-n):].reshape(bs, self.classes, n, 1, 1)
@@ -103,12 +103,12 @@ class TPVAggregator(BaseModule):
         
             fused = tpv_hw + tpv_zh + tpv_wz
             fused = fused.permute(0, 2, 3, 4, 1)
-            if self.use_checkpoint:
-                fused = torch.utils.checkpoint.checkpoint(self.decoder, fused)
-                logits = torch.utils.checkpoint.checkpoint(self.classifier, fused)
-            else:
-                fused = self.decoder(fused)
-                logits = self.classifier(fused)
+            # if self.use_checkpoint:
+            #     fused = torch.utils.checkpoint.checkpoint(self.decoder, fused)
+            #     logits = torch.utils.checkpoint.checkpoint(self.classifier, fused)
+            # else:
+            fused = self.decoder(fused)
+            logits = self.classifier(fused)
             logits = logits.permute(0, 4, 1, 2, 3)
         
             return logits

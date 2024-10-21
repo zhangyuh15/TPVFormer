@@ -178,11 +178,11 @@ class UNet2D(nn.Module):
 
     def forward(self, x, **kwargs):
         encoded_feats = self.encoder(x)
-        if self.decoder_checkpoint:
-            # unet_out = self.decoder(encoded_feats, **kwargs)
-            unet_out = torch.utils.checkpoint.checkpoint(self.decoder, encoded_feats)
-        else:
-            unet_out = self.decoder(encoded_feats, **kwargs)
+        # if self.decoder_checkpoint:
+        #     # unet_out = self.decoder(encoded_feats, **kwargs)
+        #     unet_out = torch.utils.checkpoint.checkpoint(self.decoder, encoded_feats)
+        # else:
+        unet_out = self.decoder(encoded_feats, **kwargs)
         return unet_out
 
     def get_encoder_params(self):  # lr/10 learning rate
