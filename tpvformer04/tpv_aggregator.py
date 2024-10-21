@@ -2,7 +2,7 @@
 import torch, torch.nn as nn, torch.nn.functional as F
 from mmcv.runner import BaseModule
 from mmseg.models import HEADS
-
+from mmcv.ops.point_sample import bilinear_grid_sample
 
 @HEADS.register_module()
 class TPVAggregator(BaseModule):
@@ -70,11 +70,11 @@ class TPVAggregator(BaseModule):
             points[..., 1] = points[..., 1] / (self.tpv_h*self.scale_h) * 2 - 1
             points[..., 2] = points[..., 2] / (self.tpv_z*self.scale_z) * 2 - 1
             sample_loc = points[:, :, :, [0, 1]]
-            tpv_hw_pts = F.grid_sample(tpv_hw, sample_loc).squeeze(2) # bs, c, n
+            tpv_hw_pts = bilinear_grid_sample(tpv_hw, sample_loc).squeeze(2) # bs, c, n
             sample_loc = points[:, :, :, [1, 2]]
-            tpv_zh_pts = F.grid_sample(tpv_zh, sample_loc).squeeze(2)
+            tpv_zh_pts = bilinear_grid_sample(tpv_zh, sample_loc).squeeze(2)
             sample_loc = points[:, :, :, [2, 0]]
-            tpv_wz_pts = F.grid_sample(tpv_wz, sample_loc).squeeze(2)
+            tpv_wz_pts = bilinear_grid_sample(tpv_wz, sample_loc).squeeze(2)
 
             tpv_hw_vox = tpv_hw.unsqueeze(-1).permute(0, 1, 3, 2, 4).expand(-1, -1, -1, -1, self.scale_z*self.tpv_z)
             tpv_zh_vox = tpv_zh.unsqueeze(-1).permute(0, 1, 4, 3, 2).expand(-1, -1, self.scale_w*self.tpv_w, -1, -1)

@@ -26,7 +26,7 @@ from mmcv.utils import (ConfigDict, build_from_cfg, deprecated_api_warning,
 from mmcv.utils import ext_loader
 from .multi_scale_deformable_attn_function import MultiScaleDeformableAttnFunction_fp32, \
     MultiScaleDeformableAttnFunction_fp16
-
+from mmcv.ops.point_sample import bilinear_grid_sample
 ext_module = ext_loader.load_ext(
     '_ext', ['ms_deform_attn_backward', 'ms_deform_attn_forward'])
 
@@ -436,11 +436,11 @@ def custom_multi_scale_deformable_attn_pytorch(value, value_spatial_shapes,
         else:
             value_l_ = value[i].reshape(bs, w, z, num_heads, -1).permute(0, 3, 4, 1, 2).flatten(0, 1)
             sampling_grid_l_ = sampling_grids[...,[2, 0]].transpose(1, 2).flatten(0, 1)
-        sampling_value_l_ = F.grid_sample(
+        sampling_value_l_ = bilinear_grid_sample(
             value_l_,
             sampling_grid_l_,
-            mode='bilinear',
-            padding_mode='zeros',
+            # mode='bilinear',
+            # padding_mode='zeros',
             align_corners=False)
         sampling_value_list.append(sampling_value_l_)
     

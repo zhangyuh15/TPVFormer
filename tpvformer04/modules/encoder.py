@@ -125,9 +125,13 @@ class TPVFormerEncoder(TransformerLayerSequence):
         eps = 1e-5
 
         tpv_mask = (reference_points_cam[..., 2:3] > eps)
-        reference_points_cam = reference_points_cam[..., 0:2] / torch.maximum(
-            reference_points_cam[..., 2:3], torch.ones_like(reference_points_cam[..., 2:3]) * eps)
 
+        # temp_ = torch.maximum(
+        #     reference_points_cam[..., 2:3], torch.ones_like(reference_points_cam[..., 2:3]) * eps)
+
+        temp_ = torch.clamp(reference_points_cam[..., 2:3], min=torch.ones_like(reference_points_cam[..., 2:3]) * eps)
+
+        reference_points_cam = reference_points_cam[..., 0:2] / temp_
         reference_points_cam[..., 0] /= img_metas[0]['img_shape'][0][1]
         reference_points_cam[..., 1] /= img_metas[0]['img_shape'][0][0]
 
@@ -135,11 +139,8 @@ class TPVFormerEncoder(TransformerLayerSequence):
                     & (reference_points_cam[..., 1:2] < 1.0)
                     & (reference_points_cam[..., 0:1] < 1.0)
                     & (reference_points_cam[..., 0:1] > 0.0))
-        if digit_version(TORCH_VERSION) >= digit_version('1.8'):
-            tpv_mask = torch.nan_to_num(tpv_mask)
-        else:
-            tpv_mask = tpv_mask.new_tensor(
-                np.nan_to_num(tpv_mask.cpu().numpy()))
+        
+        # tpv_mask = torch.nan_to_num(tpv_mask)
 
         reference_points_cam = reference_points_cam.permute(2, 1, 3, 0, 4)
         tpv_mask = tpv_mask.permute(2, 1, 3, 0, 4).squeeze(-1)

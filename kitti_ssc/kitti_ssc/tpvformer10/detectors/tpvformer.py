@@ -13,6 +13,7 @@ import time
 import copy
 import numpy as np
 from torch.cuda.amp import autocast
+from mmcv.ops.point_sample import bilinear_grid_sample
 
 @HEADS.register_module()
 class TPVFuser(BaseModule):
@@ -87,11 +88,11 @@ class TPVFuser(BaseModule):
             points[..., 1] = points[..., 1] / (self.bev_h*self.scale_h) * 2 - 1
             points[..., 2] = points[..., 2] / (self.bev_z*self.scale_z) * 2 - 1
             sample_loc = points[:, :, :, [0, 1]]
-            bev_hw_pts = F.grid_sample(bev_hw, sample_loc).squeeze(2) # bs, c, n
+            bev_hw_pts = bilinear_grid_sample(bev_hw, sample_loc).squeeze(2) # bs, c, n
             sample_loc = points[:, :, :, [1, 2]]
-            bev_zh_pts = F.grid_sample(bev_zh, sample_loc).squeeze(2)
+            bev_zh_pts = bilinear_grid_sample(bev_zh, sample_loc).squeeze(2)
             sample_loc = points[:, :, :, [2, 0]]
-            bev_zw_pts = F.grid_sample(bev_zw, sample_loc).squeeze(2)
+            bev_zw_pts = bilinear_grid_sample(bev_zw, sample_loc).squeeze(2)
 
             bev_hw_vox = bev_hw.unsqueeze(-1).permute(0, 1, 3, 2, 4).expand(-1, -1, -1, -1, self.scale_z*self.bev_z)
             bev_zh_vox = bev_zh.unsqueeze(-1).permute(0, 1, 4, 3, 2).expand(-1, -1, self.scale_w*self.bev_w, -1, -1)

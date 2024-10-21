@@ -105,7 +105,7 @@ def main(local_rank, args):
     # o_ = hp_model(image=image, lidar2img=lidar2img, img_shape=img_shape)
     # print(o_)
 
-    torch.onnx.export(hp_model, all_input, "tpv.onnx", verbose=False, input_names=['input0', "input1", "input2"],
+    torch.onnx.export(hp_model, all_input, "./tpv.onnx", verbose=False, input_names=['input0', "input1", "input2"],
                       output_names=['output'], opset_version=11)
     
 if __name__ == '__main__':
