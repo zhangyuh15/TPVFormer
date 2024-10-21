@@ -105,8 +105,12 @@ def main(local_rank, args):
     # o_ = hp_model(image=image, lidar2img=lidar2img, img_shape=img_shape)
     # print(o_)
 
+    import time
+    t1 = time.time()
     torch.onnx.export(hp_model, all_input, "./tpv.onnx", verbose=False, input_names=['input0', "input1", "input2"],
                       output_names=['output'], opset_version=11)
+    t2 = time.time()
+    print(f"Convert time: {t2- t1} [s]")
     
 if __name__ == '__main__':
     # Eval settings
