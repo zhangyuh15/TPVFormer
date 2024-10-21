@@ -96,6 +96,7 @@ def main(local_rank, args):
 
     hp_model = HelperModel(my_model)
 
+    # TODO: Are these input shape right, need to check 
     image = torch.randn([1, 1, 3, 100, 100])# .cuda()
     lidar2img = np.random.randn(1, 1, 4, 4).tolist()
     print(lidar2img)
@@ -111,7 +112,7 @@ def main(local_rank, args):
                       output_names=['output'], opset_version=11)
     t2 = time.time()
     print(f"Convert time: {t2- t1} [s]")
-    
+
 if __name__ == '__main__':
     # Eval settings
     parser = argparse.ArgumentParser(description='')
