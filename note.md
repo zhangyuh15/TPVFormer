@@ -11,3 +11,12 @@ grid_sampler 替换成  mmcv.ops.point_sample.bilinear_grid_sample (该算子在
 
 --------
 另外 删除了所有的checkpoint函数
+
+
+-------
+
+解决MMCVModulatedDeformConv2d算子的问题，按照如下文档操作即可（把之前安装的mmcv-full先卸载）
+
+```
+https://github.com/yangrisheng/mmcv/blob/master/docs/en/deployment/onnxruntime_op.md
+```
