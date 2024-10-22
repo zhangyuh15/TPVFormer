@@ -76,9 +76,11 @@ def main(local_rank, args):
     hp_model = HelperModel(my_model)
 
     # TODO: Are these input shape right, need to check 
+
+    ## TODO Please provide some input data of this model with right shape and dtype
+
     image = torch.randn([1, 1, 3, 100, 100])# .cuda()
     lidar2img = np.random.randn(1, 1, 4, 4).tolist()
-    print(lidar2img)
     img_shape =  [[100, 100]]
     all_input = (image, lidar2img, img_shape)
 
