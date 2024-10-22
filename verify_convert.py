@@ -15,6 +15,10 @@ import onnxruntime as ort
 import warnings
 warnings.filterwarnings("ignore")
 
+"""
+export ONNXRUNTIME_DIR=$(pwd)
+export LD_LIBRARY_PATH=$ONNXRUNTIME_DIR/lib:$LD_LIBRARY_PATH
+"""
 
 def pass_print(*args, **kwargs):
     pass
@@ -73,11 +77,23 @@ def main(local_rank, args):
     hp_model = HelperModel(my_model).to("cpu")
 
     # TODO: Are these input shape right, need to check 
-    image = torch.randn([1, 1, 3, 100, 100]).cpu()# .cuda()
-    lidar2img = np.random.randn(1, 1, 4, 4).tolist()
-    # print(lidar2img)
-    img_shape =  [[100, 100]]
-    all_input = (image, lidar2img, img_shape)
+
+    data_from_nuscene = np.load("samples/sample_0.npy",allow_pickle=True).item()
+    imgs = data_from_nuscene["imgs"]
+    img_metas = data_from_nuscene["img_metas"]
+    val_vox_label = data_from_nuscene["val_vox_label"]
+    val_grid = data_from_nuscene["val_grid"]
+    val_pt_labs = data_from_nuscene["val_pt_labs"]
+
+    imgs = imgs.cpu()# .cuda()
+    val_grid_float = val_grid.to(torch.float32) # .cuda()
+    val_pt_labs = val_pt_labs# .cuda()
+
+    lidar2img = [xx.tolist() for xx in img_metas[0]["lidar2img"]]
+    img_shape = img_metas[0]["img_shape"]
+
+    all_input = (imgs, lidar2img, img_shape, val_grid_float)
+
 
     # o_ = hp_model(image=image, lidar2img=lidar2img, img_shape=img_shape)
     # print(o_)
@@ -90,8 +106,7 @@ def main(local_rank, args):
 
     # torch inference
     print("------- torch inference-------")
-    torch_res = hp_model(image, lidar2img, img_shape)
-    
+    # torch_res1, torch_res2 = hp_model(imgs, lidar2img, img_shape, val_grid_float)
     
     print("------- onnx inference-------")
     
@@ -112,13 +127,18 @@ def main(local_rank, args):
          ort_session = ort.InferenceSession("tpv_cpu.onnx")
 
     inputs = {
-        ort_session.get_inputs()[0].name: image.numpy().astype(np.float32), 
-        ort_session.get_inputs()[1].name: np.array(lidar2img).astype(np.int64),
-        ort_session.get_inputs()[2].name: np.array(img_shape).astype(np.int64)
+        ort_session.get_inputs()[0].name: imgs.numpy().astype(np.float32), 
+        ort_session.get_inputs()[1].name: np.array(lidar2img).astype(np.float32),
+        ort_session.get_inputs()[2].name: np.array(img_shape).astype(np.int64),
+        ort_session.get_inputs()[3].name: val_grid_float.numpy().astype(np.float32),
         }
-    onnx_res = ort_session.run(None, inputs)
+    
+    import time
 
-    print(torch_res.shape, onnx_res.shape)
+    start_time = time.time()
+    onnx_res = ort_session.run(None, inputs)
+    print("all time:", time.time() - start_time)
+    # print(torch_res1.shape, onnx_res.shape)
     
     
 
