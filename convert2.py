@@ -27,14 +27,14 @@ class HelperModel(torch.nn.Module):
         super().__init__()
         self.model = model
     
-    def forward(self, image, lidar2img, img_shape):
+    def forward(self, image, lidar2img, img_shape, points):
         
         img_metas = []
         img_metas.append(
             {"lidar2img": lidar2img, 
             "img_shape": img_shape}
         ) 
-        out_ = self.model(img=image, img_metas=img_metas)
+        out_ = self.model(img=image, img_metas=img_metas, points=points)
         return out_
 
 def main(local_rank, args):
@@ -79,19 +79,45 @@ def main(local_rank, args):
 
     ## TODO Please provide some input data of this model with right shape and dtype
 
-    image = torch.randn([1, 1, 3, 100, 100])# .cuda()
-    lidar2img = np.random.randn(1, 1, 4, 4).tolist()
-    img_shape =  [[100, 100]]
-    all_input = (image, lidar2img, img_shape)
+    data_from_nuscene = np.load("samples/sample_0.npy",allow_pickle=True).item()
+    imgs = data_from_nuscene["imgs"]
+    img_metas = data_from_nuscene["img_metas"]
+    val_vox_label = data_from_nuscene["val_vox_label"]
+    val_grid = data_from_nuscene["val_grid"]
+    val_pt_labs = data_from_nuscene["val_pt_labs"]
 
-    # o_ = hp_model(image=image, lidar2img=lidar2img, img_shape=img_shape)
+    imgs = imgs.cpu()# .cuda()
+    val_grid_float = val_grid.to(torch.float32) # .cuda()
+    val_pt_labs = val_pt_labs# .cuda()
+
+    # print(type(), type(img_metas[0]["lidar2img"][0]))
+    # exit()
+    lidar2img = [xx.tolist() for xx in img_metas[0]["lidar2img"]]
+    img_shape = img_metas[0]["img_shape"]
+
+    # print(type(imgs), type(val_grid), type(val_grid_float), lidar2img, img_shape)
+    # print("image_metas:", len(img_metas), img_metas[0].keys())
+
+    # exit()
+    
+    # image = torch.randn([1, 1, 3, 100, 100])# .cuda()
+    # lidar2img = np.random.randn(1, 1, 4, 4).tolist()
+    # img_shape =  [[100, 100]]
+    # all_input = (image, lidar2img, img_shape)
+    all_input = (imgs, lidar2img, img_shape, val_grid_float)
+
+    # print(type(imgs), type(lidar2img), type(img_shape), type(val_grid_float))
+    print(img_shape)
+    # exit()
+
+    # o_ = hp_model(image=imgs, lidar2img=lidar2img, img_shape=img_shape, points=val_grid_float)
     # print(o_)
 
     torch.save(hp_model.state_dict(), "tpv_cpu.pth")
     import time
     t1 = time.time()
-    torch.onnx.export(hp_model, all_input, "./tpv_cpu.onnx", verbose=False, input_names=['input0', "input1", "input2"],
-                      output_names=['output'], opset_version=13)
+    torch.onnx.export(hp_model, all_input, "./tpv_cpu.onnx", verbose=False, input_names=['input0', "input1", "input2", "input3"],
+                      output_names=['output0', 'output1'], opset_version=13)
     t2 = time.time()
     print(f"Convert time: {t2- t1} [s]")
 

@@ -24,14 +24,14 @@ class HelperModel(torch.nn.Module):
         super().__init__()
         self.model = model
     
-    def forward(self, image, lidar2img, img_shape):
+    def forward(self, image, lidar2img, img_shape, points):
         
         img_metas = []
         img_metas.append(
             {"lidar2img": lidar2img, 
             "img_shape": img_shape}
         ) 
-        out_ = self.model(img=image, img_metas=img_metas)
+        out_ = self.model(img=image, img_metas=img_metas, points=points)
         return out_
 
 def main(local_rank, args):
