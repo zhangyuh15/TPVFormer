@@ -3,13 +3,14 @@ import os, time, argparse, os.path as osp, numpy as np
 import torch
 import torch.distributed as dist
 
-from utils.metric_util import MeanIoU
-from utils.load_save_util import revise_ckpt
+
 from dataloader.dataset import get_nuScenes_label_name
 from builder import loss_builder
 
-from mmcv import Config
-
+from config.tpv04_occupancy import dataset_params as dataset_config
+from config._base_.dataset import train_data_loader as train_dataloader_config
+from config._base_.dataset import val_data_loader as val_dataloader_config
+from config.tpv04_occupancy import grid_size
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -17,21 +18,17 @@ warnings.filterwarnings("ignore")
 def pass_print(*args, **kwargs):
     pass
 
-def main(local_rank, args):
+def main():
 
     # load config
-    cfg = Config.fromfile(args.py_config)
 
     # check label_mapping, fill_label, ignore_label, pc_dataset_type
-    dataset_config = cfg.dataset_params
-    
     ignore_label = dataset_config['ignore_label']
     version = dataset_config['version']
-    # check num_workers, imageset
-    train_dataloader_config = cfg.train_data_loader
-    val_dataloader_config = cfg.val_data_loader
 
-    grid_size = cfg.grid_size
+    # check num_workers, imageset
+    # train_dataloader_config = cfg.train_data_loader
+    # val_dataloader_config = cfg.val_data_loader
 
     # init DDP
 
@@ -44,10 +41,11 @@ def main(local_rank, args):
             val_dataloader_config,
             grid_size=grid_size,
             version=version,
-            dist=distributed,
-            scale_rate=cfg.get('scale_rate', 1)
+            dist=False,
+            scale_rate=1
         )
 
+    os.makedirs("samples", exist_ok=True)
     with torch.no_grad():
         for i_iter_val, (imgs, img_metas, val_vox_label, val_grid, val_pt_labs) in enumerate(val_dataset_loader):
             
@@ -56,6 +54,18 @@ def main(local_rank, args):
             val_grid_int = val_grid.to(torch.long).cuda()
             vox_label = val_vox_label.type(torch.LongTensor).cuda()
             val_pt_labs = val_pt_labs.cuda()
+            
+            to_save = dict(
+                imgs=imgs,
+                img_metas=img_metas,
+                val_vox_label=val_vox_label,
+                val_grid=val_grid,
+                val_pt_labs=val_pt_labs,
+            )
+            np.save("samples/sample_{}".format(i_iter_val), to_save)
+
+            if i_iter_val > 10:
+                break
 
             # predict_labels_vox, predict_labels_pts = my_model(img=imgs, img_metas=img_metas, points=val_grid_float)
             
@@ -63,14 +73,4 @@ def main(local_rank, args):
 
 if __name__ == '__main__':
     # Eval settings
-    parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--py-config', default='config/tpv04_occupancy.py')
-    parser.add_argument('--ckpt-path', type=str, default='')
-
-    args = parser.parse_args()
-    
-    ngpus = torch.cuda.device_count()
-    args.gpus = ngpus
-    print(args)
-
-    torch.multiprocessing.spawn(main, args=(args,), nprocs=args.gpus)
+    main()
