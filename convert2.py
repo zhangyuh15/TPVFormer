@@ -13,7 +13,11 @@ from mmseg.utils import get_root_logger
 
 import warnings
 warnings.filterwarnings("ignore")
+import mmcv
+from mmcv.onnx import register_extra_symbolics
 
+opset_version = 13
+register_extra_symbolics(opset_version)
 
 def pass_print(*args, **kwargs):
     pass
@@ -85,7 +89,7 @@ def main(local_rank, args):
     import time
     t1 = time.time()
     torch.onnx.export(hp_model, all_input, "./tpv_cpu.onnx", verbose=False, input_names=['input0', "input1", "input2"],
-                      output_names=['output'], opset_version=11)
+                      output_names=['output'], opset_version=13)
     t2 = time.time()
     print(f"Convert time: {t2- t1} [s]")
 

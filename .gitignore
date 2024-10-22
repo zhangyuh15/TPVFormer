@@ -6,6 +6,11 @@ __pycache__/
 # C extensions
 *.so
 
+third_party/
+
+tpv_cpu.pth
+tpv_cpu.onnx
+
 # Distribution / packaging
 .Python
 build/

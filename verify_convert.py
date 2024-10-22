@@ -89,14 +89,32 @@ def main(local_rank, args):
     hp_model.load_state_dict(state_dict)
 
     # torch inference
+    print("------- torch inference-------")
     torch_res = hp_model(image, lidar2img, img_shape)
     
-    ort_session = ort.InferenceSession("tpv_cpu.onnx")
+    
+    print("------- onnx inference-------")
+    
+    import_options = True
+    if import_options:
+        from mmcv.ops import get_onnxruntime_op_path
+
+
+    ort_custom_op_path = get_onnxruntime_op_path()
+    print("ort_custom_op_path:", ort_custom_op_path)
+    assert os.path.exists(ort_custom_op_path)
+
+    session_options = ort.SessionOptions()
+    session_options.register_custom_ops_library(ort_custom_op_path)
+    if import_options:
+        ort_session = ort.InferenceSession("tpv_cpu.onnx", session_options)
+    else:
+         ort_session = ort.InferenceSession("tpv_cpu.onnx")
 
     inputs = {
-        ort_session.get_inputs()[0].name: image.numpy.astype(np.float32), 
-        ort_session.get_inputs()[1].name: np.array(lidar2img).astype(np.float32),
-        ort_session.get_inputs()[2].name: np.array(img_shape).astype(np.float32)
+        ort_session.get_inputs()[0].name: image.numpy().astype(np.float32), 
+        ort_session.get_inputs()[1].name: np.array(lidar2img).astype(np.int64),
+        ort_session.get_inputs()[2].name: np.array(img_shape).astype(np.int64)
         }
     onnx_res = ort_session.run(None, inputs)
 
