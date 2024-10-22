@@ -11,7 +11,7 @@ grid_sampler 替换成  mmcv.ops.point_sample.bilinear_grid_sample (该算子在
 
 --------
 另外 删除了所有的checkpoint函数
-
+将所有register_buffer修改
 
 -------
 

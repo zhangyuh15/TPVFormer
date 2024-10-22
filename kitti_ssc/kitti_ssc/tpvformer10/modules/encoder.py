@@ -48,19 +48,26 @@ class TPVFormerEncoder(TransformerLayerSequence):
         ref_3d_wz = self.get_reference_points(bev_w, bev_z, pc_range[3]-pc_range[0], num_points_in_pillar[2], '3d', device='cpu')
         ref_3d_wz = ref_3d_wz.permute(3, 0, 1, 2)[[2, 0, 1]]
         ref_3d_wz = ref_3d_wz.permute(1, 2, 3, 0)
-        self.register_buffer('ref_3d_hw', ref_3d_hw)
-        self.register_buffer('ref_3d_zh', ref_3d_zh)
-        self.register_buffer('ref_3d_wz', ref_3d_wz)
-        
+        # self.register_buffer('ref_3d_hw', ref_3d_hw)
+        # self.register_buffer('ref_3d_zh', ref_3d_zh)
+        # self.register_buffer('ref_3d_wz', ref_3d_wz)
+        self.ref_3d_hw = ref_3d_hw
+        self.ref_3d_zh = ref_3d_zh
+        self.ref_3d_wz = ref_3d_wz
+
         ref_2d_hw = self.get_reference_points(bev_h, bev_w, dim='2d', bs=1, device='cpu')
         ref_2d_zh = self.get_reference_points(bev_z, bev_h, dim='2d', bs=1, device='cpu')
         ref_2d_wz = self.get_reference_points(bev_w, bev_z, dim='2d', bs=1, device='cpu')
-        self.register_buffer('ref_2d_hw', ref_2d_hw)
-        self.register_buffer('ref_2d_zh', ref_2d_zh)
-        self.register_buffer('ref_2d_wz', ref_2d_wz)
+        # self.register_buffer('ref_2d_hw', ref_2d_hw)
+        # self.register_buffer('ref_2d_zh', ref_2d_zh)
+        # self.register_buffer('ref_2d_wz', ref_2d_wz)
+        self.ref_2d_hw = ref_2d_hw
+        self.ref_2d_zh = ref_2d_zh
+        self.ref_2d_wz = ref_2d_wz        
 
         cross_view_ref_points = self.get_cross_view_ref_points(bev_h, bev_w, bev_z, num_points_in_pillar_cross_view)
-        self.register_buffer('cross_view_ref_points', cross_view_ref_points)
+        # self.register_buffer('cross_view_ref_points', cross_view_ref_points)
+        self.cross_view_ref_points = cross_view_ref_points
         self.num_points_cross_view = num_points_in_pillar_cross_view
 
 

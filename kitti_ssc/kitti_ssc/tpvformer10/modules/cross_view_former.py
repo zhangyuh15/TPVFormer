@@ -113,17 +113,20 @@ class CrossViewEncoder(TransformerLayerSequence):
 
         # reference_points = torch.stack([reference_points[..., 1], reference_points[..., 0]], dim=-1)
         
-        self.register_buffer('reference_points', reference_points)
+        # self.register_buffer('reference_points', reference_points)
+        self.reference_points = reference_points
 
         self.positional_encoding_hw = build_positional_encoding(positional_encoding_hw)
         self.positional_encoding_zh = build_positional_encoding(positional_encoding_zh)
         self.positional_encoding_wz = build_positional_encoding(positional_encoding_wz)
 
         spatial_shapes = torch.tensor([[bev_h, bev_w], [bev_z, bev_h], [bev_w, bev_z]], dtype=torch.long)
-        self.register_buffer('spatial_shapes', spatial_shapes)
+        # self.register_buffer('spatial_shapes', spatial_shapes)
+        self.spatial_shapes = spatial_shapes
         level_start_index = torch.cat((spatial_shapes.new_zeros(
             (1,)), spatial_shapes.prod(1).cumsum(0)[:-1]))
-        self.register_buffer('level_start_index', level_start_index)
+        # self.register_buffer('level_start_index', level_start_index)
+        self.level_start_index = level_start_index
 
     @auto_fp16()
     def forward(self, bevs, *args, **kwargs):

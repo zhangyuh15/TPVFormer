@@ -42,12 +42,17 @@ class TPVFormerEncoder(TransformerLayerSequence):
         ref_3d_wz = self.get_reference_points(tpv_w, tpv_z, pc_range[4]-pc_range[1], num_points_in_pillar[2], '3d', device='cpu')
         ref_3d_wz = ref_3d_wz.permute(3, 0, 1, 2)[[1, 2, 0]]
         ref_3d_wz = ref_3d_wz.permute(1, 2, 3, 0)
-        self.register_buffer('ref_3d_hw', ref_3d_hw)
-        self.register_buffer('ref_3d_zh', ref_3d_zh)
-        self.register_buffer('ref_3d_wz', ref_3d_wz)
+        # self.register_buffer('ref_3d_hw', ref_3d_hw)
+        # self.register_buffer('ref_3d_zh', ref_3d_zh)
+        # self.register_buffer('ref_3d_wz', ref_3d_wz)
+        self.ref_3d_hw = ref_3d_hw
+        self.ref_3d_zh = ref_3d_zh
+        self.ref_3d_wz = ref_3d_wz
+
         
         cross_view_ref_points = self.get_cross_view_ref_points(tpv_h, tpv_w, tpv_z, num_points_in_pillar_cross_view)
-        self.register_buffer('cross_view_ref_points', cross_view_ref_points)
+        # self.register_buffer('cross_view_ref_points', cross_view_ref_points)
+        self.cross_view_ref_points = cross_view_ref_points
         self.num_points_cross_view = num_points_in_pillar_cross_view
 
 

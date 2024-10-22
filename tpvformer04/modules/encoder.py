@@ -37,16 +37,22 @@ class TPVFormerEncoder(TransformerLayerSequence):
         ref_3d_wz = self.get_reference_points(tpv_w, tpv_z, pc_range[4]-pc_range[1], num_points_in_pillar[2], '3d', device='cpu')
         ref_3d_wz = ref_3d_wz.permute(3, 0, 1, 2)[[1, 2, 0]]
         ref_3d_wz = ref_3d_wz.permute(1, 2, 3, 0)
-        self.register_buffer('ref_3d_hw', ref_3d_hw)
-        self.register_buffer('ref_3d_zh', ref_3d_zh)
-        self.register_buffer('ref_3d_wz', ref_3d_wz)
-        
+        # self.register_buffer('ref_3d_hw', ref_3d_hw)
+        # self.register_buffer('ref_3d_zh', ref_3d_zh)
+        # self.register_buffer('ref_3d_wz', ref_3d_wz)
+        self.ref_3d_hw = ref_3d_hw        
+        self.ref_3d_zh = ref_3d_zh
+        self.ref_3d_wz = ref_3d_wz        
+
         ref_2d_hw = self.get_reference_points(tpv_h, tpv_w, dim='2d', bs=1, device='cpu')
         ref_2d_zh = self.get_reference_points(tpv_z, tpv_h, dim='2d', bs=1, device='cpu')
         ref_2d_wz = self.get_reference_points(tpv_w, tpv_z, dim='2d', bs=1, device='cpu')
-        self.register_buffer('ref_2d_hw', ref_2d_hw)
-        self.register_buffer('ref_2d_zh', ref_2d_zh)
-        self.register_buffer('ref_2d_wz', ref_2d_wz)
+        # self.register_buffer('ref_2d_hw', ref_2d_hw)
+        # self.register_buffer('ref_2d_zh', ref_2d_zh)
+        # self.register_buffer('ref_2d_wz', ref_2d_wz)
+        self.ref_2d_hw = ref_2d_hw
+        self.ref_2d_zh = ref_2d_zh
+        self.ref_2d_wz = ref_2d_wz
 
     @staticmethod
     def get_reference_points(H, W, Z=8, num_points_in_pillar=4, dim='3d', bs=1, device='cuda', dtype=torch.float):

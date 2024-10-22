@@ -44,8 +44,8 @@ class TPVFormerHead(BaseModule):
         # positional encoding
         self.positional_encoding = build_positional_encoding(positional_encoding)
         tpv_mask_hw = torch.zeros(1, tpv_h, tpv_w)
-        self.register_buffer('tpv_mask_hw', tpv_mask_hw)
-
+        # self.register_buffer('tpv_mask_hw', tpv_mask_hw)
+        self.tpv_mask_hw = tpv_mask_hw
         # transformer layers
         self.encoder = build_transformer_layer_sequence(encoder)
         self.level_embeds = nn.Parameter(
