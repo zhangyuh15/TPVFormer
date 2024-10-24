@@ -10,7 +10,6 @@ pip install mmdet==2.14.0
 
 pip install mmsegmentation==0.14.1 
 
-
 pip install numba==0.48.0 
 
 pip install numpy==1.23.1 

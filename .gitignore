@@ -11,6 +11,10 @@ third_party/
 tpv_cpu.pth
 tpv_cpu.onnx
 
+debug_data/
+
+debug_submodel/
+
 samples/
 
 # Distribution / packaging
