@@ -68,6 +68,8 @@ class TPVFormer(BaseModule):
         else:
             return None
         if hasattr(self, 'img_neck'):
+            import numpy as np
+            # np.save("neck_ipt.npy", {"neck_ipt": img_feats}, )
             img_feats = self.img_neck(img_feats)
 
         img_feats_reshaped = []
@@ -85,7 +87,10 @@ class TPVFormer(BaseModule):
         ):
         """Forward training function.
         """
+        import numpy as np
         img_feats = self.extract_img_feat(img=img, use_grid_mask=use_grid_mask)
+        # np.save("img_feats.npy", {"img_feats": img_feats}, )
         outs = self.tpv_head(img_feats, img_metas)
+        # np.save("agg_ipt.npy", {"agg_ipt": outs})
         outs = self.tpv_aggregator(outs, points)
         return outs

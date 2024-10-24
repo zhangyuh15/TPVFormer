@@ -198,6 +198,7 @@ class TPVFormerEncoder(TransformerLayerSequence):
         ref_2d_hw = self.ref_2d_hw.clone().expand(bs, -1, -1, -1)
         hybird_ref_2d = torch.cat([ref_2d_hw, ref_2d_hw], 0)
 
+        print(len(self.layers), self.layers)
         for lid, layer in enumerate(self.layers):
             output = layer(
                 tpv_query,
@@ -214,7 +215,9 @@ class TPVFormerEncoder(TransformerLayerSequence):
                 reference_points_cams=reference_points_cams,
                 tpv_masks=tpv_masks,
                 **kwargs)
+            print(output[0].shape, output[1].shape, output[2].shape,tpv_query[0].shape, tpv_query[1].shape, tpv_query[2].shape) 
             tpv_query = output
+            
             if self.return_intermediate:
                 intermediate.append(output)
 
@@ -222,3 +225,5 @@ class TPVFormerEncoder(TransformerLayerSequence):
             return torch.stack(intermediate)
 
         return output
+    
+        return hybird_ref_2d

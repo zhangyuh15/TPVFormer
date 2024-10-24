@@ -46,14 +46,15 @@ class HelperModelHead(torch.nn.Module):
         super().__init__()
         self.model = model
     
-    def forward(self, image, lidar2img, img_shape):
+    def forward(self, t1, t2, t3, t4, lidar2img, img_shape):
         img_metas = []
         img_metas.append(
             {"lidar2img": lidar2img, 
             "img_shape": img_shape}
         ) 
-        out_ = self.model(image, img_metas)
+        out_ = self.model([t1, t2, t3, t4], img_metas)
         return out_
+    
     
 class HelperModelAgg(torch.nn.Module):
     def __init__(self, model):
@@ -173,25 +174,32 @@ def main(local_rank, args):
     # print(f"Convert time: {t2- t1} [s]")
     
     #########################################
-    print("export: head")
-    img_feats = np.load("debug_data/img_feats.npy", allow_pickle=True).item()["img_feats"]
+    # print("export: head")
+    # img_feats = np.load("debug_data/img_feats.npy", allow_pickle=True).item()["img_feats"]
 
-    all_input = (img_feats, lidar2img, img_shape)
-    session_options = ort.SessionOptions()
-    session_options.register_custom_ops_library(ort_custom_op_path)
-    ort_session = ort.InferenceSession("debug_submodel/tpv_head.onnx", session_options)
+    # all_input = (img_feats[0], img_feats[1], img_feats[2], img_feats[3], lidar2img, img_shape)
+    # session_options = ort.SessionOptions()
+    # session_options.register_custom_ops_library(ort_custom_op_path)
+    # ort_session = ort.InferenceSession("debug_submodel/tpv_headd.onnx", session_options)
 
-    inputs = {
-        ort_session.get_inputs()[0].name: all_input[0].detach().numpy().astype(np.float32), 
-        ort_session.get_inputs()[1].name: np.array(all_input[1]).astype(np.float32), 
-        ort_session.get_inputs()[2].name: np.array(all_input[2]).astype(np.int64), 
-        }
+    # print(len(ort_session.get_inputs()))
+    # print(len(ort_session.get_outputs()))
+    # print([iiiii.name for iiiii in ort_session.get_inputs()])
 
-    t1 = time.time()
-    onnx_res = ort_session.run(None, inputs)
-    t2 = time.time()
-    ort_session.close()
-    print(f"Convert time: {t2- t1} [s]")
+    # inputs = {
+    #     ort_session.get_inputs()[0].name: all_input[0].detach().numpy().astype(np.float32), 
+    #     ort_session.get_inputs()[1].name: all_input[1].detach().numpy().astype(np.float32), 
+    #     ort_session.get_inputs()[2].name: all_input[2].detach().numpy().astype(np.float32), 
+    #     ort_session.get_inputs()[3].name: all_input[3].detach().numpy().astype(np.float32), 
+    #     # ort_session.get_inputs()[4].name: np.array(all_input[4]).astype(np.float32), 
+    #     # ort_session.get_inputs()[5].name: np.array(all_input[5]).astype(np.int64), 
+    #     }
+
+    # t1 = time.time()
+    # onnx_res = ort_session.run(None, inputs)
+    # t2 = time.time()
+
+    # print(f"Convert time: {t2- t1} [s]")
 
     # #########################################
     # print("export: agg")
@@ -212,6 +220,41 @@ def main(local_rank, args):
     # onnx_res = ort_session.run(None, inputs) # This takes 0.7535841464996338 s
     # t2 = time.time()
     # print(f"Convert time: {t2- t1} [s]")
+
+    ############# 
+    print("export: Encoder")
+
+    inp_data = np.load("debug_data/encode_ipt.npy", allow_pickle=True).item()
+    nnn = ["tpv_queries_hw","tpv_queries_zh","tpv_queries_wz","feat_flatten", "tpv_h", "tpv_w", "tpv_z",  "tpv_pos_hw", "spatial_shapes", "level_start_index"]
+    all_input = []
+    for n_ in nnn:
+        all_input.append(inp_data[n_])
+
+    all_input.append(lidar2img)
+    all_input.append(img_shape)
+    all_input = tuple(all_input)
+    input_name = ["input{}".format(i) for i in range(12)]
+    session_options = ort.SessionOptions()
+    session_options.register_custom_ops_library(ort_custom_op_path)
+    ort_session = ort.InferenceSession("debug_submodel/tpv_encoder.onnx", session_options)
+    inputs = dict()
+    for i, aipt in enumerate(all_input):
+        print(i)
+        if i < 10 and i not in [4, 5, 6]:
+            inputs["input{}".format(i)] = aipt.detach().numpy().astype(np.float32)
+        elif i in [4, 5, 6]:
+            inputs["input{}".format(i)] = np.array([aipt]).astype(np.int64)
+        elif i == 10:
+            inputs["input{}".format(i)] = np.array(aipt).astype(np.float32)     
+        elif i == 11:
+            inputs["input{}".format(i)] = np.array(aipt).astype(np.int64)
+    t1 = time.time()
+    print(len(all_input), len(input_name))
+    print([llll.name for llll in ort_session.get_inputs()])
+    print(inputs.keys())
+    onnx_res = ort_session.run(None, inputs) # This takes 0.7535841464996338 s
+    t2 = time.time()
+    print(f"Convert time: {t2- t1} [s]")
 
 if __name__ == '__main__':
     # Eval settings

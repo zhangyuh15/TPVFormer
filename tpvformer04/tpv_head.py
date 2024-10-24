@@ -111,6 +111,20 @@ class TPVFormerHead(BaseModule):
         level_start_index = torch.cat((spatial_shapes.new_zeros(
             (1,)), spatial_shapes.prod(1).cumsum(0)[:-1]))
         feat_flatten = feat_flatten.permute(0, 2, 1, 3)  # (num_cam, H*W, bs, embed_dims)
+        # to_save = {
+        #     "tpv_queries_hw": tpv_queries_hw,
+        #     "tpv_queries_zh":tpv_queries_zh,
+        #     "tpv_queries_wz":tpv_queries_wz,
+        #     "feat_flatten":feat_flatten,
+        #     "tpv_h":self.tpv_h,
+        #     "tpv_w":self.tpv_w,
+        #     "tpv_z":self.tpv_z,
+        #     "tpv_pos_hw": tpv_pos_hw,
+        #     "spatial_shapes": spatial_shapes,
+        #     "level_start_index": level_start_index,
+        # }
+        # import numpy as np
+        # np.save("encode_ipt.npy", to_save)
         tpv_embed = self.encoder(
             [tpv_queries_hw, tpv_queries_zh, tpv_queries_wz],
             feat_flatten,
@@ -125,3 +139,4 @@ class TPVFormerHead(BaseModule):
         )
         
         return tpv_embed
+        # return feat_flatten

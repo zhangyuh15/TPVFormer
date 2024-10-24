@@ -110,7 +110,7 @@ def main(local_rank, args):
     print(img_shape)
     # exit()
 
-    # o_ = hp_model(image=imgs, lidar2img=lidar2img, img_shape=img_shape, points=val_grid_float)
+    o_ = hp_model(image=imgs, lidar2img=lidar2img, img_shape=img_shape, points=val_grid_float)
     # print(o_)
 
     torch.save(hp_model.state_dict(), "tpv_cpu.pth")

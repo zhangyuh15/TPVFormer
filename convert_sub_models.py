@@ -46,13 +46,13 @@ class HelperModelHead(torch.nn.Module):
         super().__init__()
         self.model = model
     
-    def forward(self, image, lidar2img, img_shape):
+    def forward(self, t1, t2, t3, t4, lidar2img, img_shape):
         img_metas = []
         img_metas.append(
             {"lidar2img": lidar2img, 
             "img_shape": img_shape}
         ) 
-        out_ = self.model(image, img_metas)
+        out_ = self.model([t1, t2, t3, t4], img_metas)
         return out_
     
 class HelperModelAgg(torch.nn.Module):
@@ -63,7 +63,33 @@ class HelperModelAgg(torch.nn.Module):
     def forward(self, ipt1,ipt2, ipt3, point):
         out_ = self.model([ipt1,ipt2, ipt3], point)
         return out_
+
+class HelperModelEncoder(torch.nn.Module):
+    def __init__(self, model):
+        super().__init__()
+        self.model = model
     
+    def forward(self, tpv_queries_hw, tpv_queries_zh, tpv_queries_wz, feat_flatten, tpv_h, tpv_w, tpv_z,  tpv_pos_hw, spatial_shapes, level_start_index,lidar2img, img_shape):
+        img_metas = []
+        img_metas.append(
+            {"lidar2img": lidar2img, 
+            "img_shape": img_shape}
+        ) 
+        out_ = self.model(
+            [tpv_queries_hw, tpv_queries_zh, tpv_queries_wz],
+            feat_flatten,
+            feat_flatten,
+            tpv_h=tpv_h,
+            tpv_w=tpv_w,
+            tpv_z=tpv_z,
+            tpv_pos=[tpv_pos_hw, None, None],
+            spatial_shapes=spatial_shapes,
+            level_start_index=level_start_index,
+            img_metas=img_metas,
+        )
+        return out_
+
+     
 
 def main(local_rank, args):
     # global settings
@@ -152,17 +178,24 @@ def main(local_rank, args):
     # print(f"Convert time: {t2- t1} [s]")
 
     # #########################################
-    print("export: head")
-    img_feats = np.load("debug_data/img_feats.npy", allow_pickle=True).item()["img_feats"]
+    # print("export: head")
+    # img_feats = np.load("debug_data/img_feats.npy", allow_pickle=True).item()["img_feats"]
 
-    hp_model = HelperModelHead(my_model.tpv_head)
-    all_input = (img_feats, lidar2img, img_shape)
-    t1 = time.time()
-    torch.onnx.export(hp_model, all_input, "debug_submodel/tpv_head.onnx", verbose=False, input_names=['input0', 'input1', 'input2'],
-                      output_names=['output0'], opset_version=13)
-    t2 = time.time()
-    print(f"Convert time: {t2- t1} [s]")
+    # hp_model = HelperModelHead(my_model.tpv_head)
+    # print(lidar2img, img_shape)
+    # all_input = (img_feats[0], img_feats[1], img_feats[2], img_feats[3], lidar2img, img_shape)
+    # print(type(img_feats), len(img_feats))
+    # all_input_name = ["innnput{}".format(iii) for iii in range(6)]
+    # print(len(all_input), len(all_input_name))
+    # t1 = time.time()
+    # torch.onnx.export(hp_model, all_input, "debug_submodel/tpv_headd.onnx", verbose=False, input_names=all_input_name,
+    #                   output_names=['output0'], opset_version=13)
+    # t2 = time.time()
+    # print(f"Convert time: {t2- t1} [s]")
 
+    # import onnxruntime as ort
+    # ort_session = ort.InferenceSession("debug_submodel/tpv_headd.onnx")
+    # print(len(ort_session.get_inputs()))
     #########################################
     # print("export: agg")
     # agg_ipt = np.load("debug_data/agg_ipt.npy", allow_pickle=True).item()["agg_ipt"]
@@ -175,6 +208,30 @@ def main(local_rank, args):
     #                   output_names=['output0', 'output1'], opset_version=13)
     # t2 = time.time()
     # print(f"Convert time: {t2- t1} [s]")
+
+    #######################
+    print("export: Encoder")
+    inp_data = np.load("debug_data/encode_ipt.npy", allow_pickle=True).item()
+    nnn = ["tpv_queries_hw","tpv_queries_zh","tpv_queries_wz","feat_flatten", "tpv_h", "tpv_w", "tpv_z",  "tpv_pos_hw", "spatial_shapes", "level_start_index"]
+    all_input = []
+    for n_ in nnn:
+        all_input.append(inp_data[n_])
+
+    all_input.append(lidar2img)
+    all_input.append(img_shape)
+    all_input = tuple(all_input)
+    input_name = ["input{}".format(i) for i in range(12)]
+
+    hp_model = HelperModelEncoder(my_model.tpv_head.encoder)
+
+    t1 = time.time()
+    print(len(all_input), len(input_name))
+    torch.onnx.export(hp_model, all_input, "debug_submodel/tpv_encoder.onnx", verbose=True, input_names=input_name,
+                      output_names=['output0'], opset_version=13)
+    t2 = time.time()
+    print(f"Convert time: {t2- t1} [s]")
+
+    #######################  
 
 if __name__ == '__main__':
     # Eval settings
