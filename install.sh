@@ -2,13 +2,19 @@
 
 conda install pytorch==1.10.0 torchvision==0.11.0 torchaudio==0.10.0 -c pytorch -y
 
+# conda install pytorch==1.13.0 torchvision==0.14.0 torchaudio==0.13.0 -c pytorch -y
+
 pip install openmim 
 
 pip install mmcv-full==1.4.0 
+# pip install mmcv-full==1.7.1
 
 pip install mmdet==2.14.0 
+# pip install mmdet==2.28.0
 
-pip install mmsegmentation==0.14.1 
+
+pip install mmsegmentation==0.14.1
+# pip install mmsegmentation==0.29.1
 
 pip install numba==0.48.0 
 
